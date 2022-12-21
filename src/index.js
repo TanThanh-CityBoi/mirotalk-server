@@ -15,8 +15,6 @@ app.use(cors());
 
 route(app);
 
-const jdhfjdhfj =  'ddd'
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
