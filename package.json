@@ -8,8 +8,8 @@
     "huskyinit": "npx husky add .husky/pre-commit \"npm run lint:staged\"",
     "lint:staged": "lint-staged",
     "prestart:dev": "npm i",
-    "start:dev": "nodemon index.js",
-    "start": "node index.js",
+    "start:dev": "nodemon src/index.js",
+    "start": "node src/index.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,js}\" --fix"
   },
   "lint-staged": {
