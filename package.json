@@ -6,7 +6,14 @@
   "scripts": {
     "prestart:dev": "npm i",
     "start:dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,js}\" --fix"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "repository": {
     "type": "git",
@@ -26,5 +33,13 @@
     "excel4node": "^1.7.2",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.13"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^8.0.1",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.2.1"
   }
 }
