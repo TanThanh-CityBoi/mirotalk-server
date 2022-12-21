@@ -15,6 +15,11 @@
     "start": "node src/index.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.{ts,js}\" --fix"
   },
+  "husky": {
+    "hook": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
     "*.{ts,js}": [
       "prettier --write",
