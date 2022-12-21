@@ -1,0 +1,30 @@
+{
+  "name": "mirotalk-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prestart:dev": "npm i",
+    "start:dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanThanh-CityBoi/mirotalk-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TanThanh-CityBoi/mirotalk-server/issues"
+  },
+  "homepage": "https://github.com/TanThanh-CityBoi/mirotalk-server#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "excel4node": "^1.7.2",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.13"
+  }
+}
