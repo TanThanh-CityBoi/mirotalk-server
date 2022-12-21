@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky install",
-    "huskyinit": "npx husky add .husky/pre-commit \"yarn lint:staged\"",
+    "huskyinit": "npx husky add .husky/pre-commit \"npm run lint:staged\"",
     "lint:staged": "lint-staged",
     "prestart:dev": "npm i",
     "start:dev": "nodemon index.js",
