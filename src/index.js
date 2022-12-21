@@ -15,8 +15,6 @@ app.use(cors());
 
 route(app);
 
-const af = 'dsdksk'
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
