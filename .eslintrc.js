@@ -1,8 +1,16 @@
 module.exports = {
-  parser: "babel-eslint",
-  plugins: ["prettier"],
-  extends: [
-    "eslint:recommended"
-  ],
-  ignorePatterns: ['.eslintrc.js'],
+	env: {
+		browser: true,
+		commonjs: true,
+		es2021: true,
+	},
+	extends: 'xo',
+	overrides: [
+	],
+	parserOptions: {
+		ecmaVersion: 'latest',
+	},
+	rules: {
+		properties: 'never',
+	},
 };
