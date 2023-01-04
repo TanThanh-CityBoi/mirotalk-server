@@ -1,3 +1,5 @@
+'use strict';
+
 const cors = require('cors');
 const express = require('express');
 const morgan = require('morgan');
@@ -14,6 +16,7 @@ const config = require('./common/config');
 const log = new Logger('Server');
 const app = express();
 require('dotenv').config();
+let roomList = new Map();
 
 app.use(cors());
 app.use(morgan('combined'));
@@ -47,4 +50,4 @@ httpsServer.listen(config.listenPort, () => {
 		'font-family:monospace',
 	);
 });
-socket(io);
+socket(io, roomList);

@@ -1,5 +1,5 @@
 
-function socket(io) {
+function socket(io, roomList) {
   io.on('connection', (socket) => {
     socket.on('createRoom', async ({ room_id }, callback) => {
       socket.room_id = room_id;
