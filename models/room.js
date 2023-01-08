@@ -4,7 +4,10 @@ const Schema = mongoose.Schema;
 const Room = new Schema(
     {
         name: String,
-        code: String,
+        code: {
+            type: String,
+            unique: true
+        },
         host: {
             type: Schema.Types.ObjectId,
             ref: 'user',
@@ -14,6 +17,10 @@ const Room = new Schema(
             type: Schema.Types.ObjectId,
             ref: "user"
         }],
+        messages: [{
+            type: Schema.Types.ObjectId,
+            ref: "message"
+        }]
     },
     { timestamps: true }
 );

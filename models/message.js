@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
+const room = require("./room");
 const Schema = mongoose.Schema;
 
 const Message = new Schema(
     {
-        roomId: Schema.Types.ObjectId,
         sender: { type: Schema.Types.ObjectId, ref: 'user' },
         content: String,
         type: String,
