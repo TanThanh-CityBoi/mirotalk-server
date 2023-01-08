@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const room = require("./room");
 const Schema = mongoose.Schema;
 
 const Message = new Schema(
