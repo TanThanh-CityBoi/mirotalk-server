@@ -7,8 +7,7 @@ const User = new Schema(
             type: String,
             required: true,
         },
-        password: String,
-        avatar: String
+        socketId: String,
     },
     { timestamps: true }
 );

@@ -4,8 +4,10 @@ const Schema = mongoose.Schema;
 const Room = new Schema(
     {
         name: String,
-        rootId: {
+        code: String,
+        host: {
             type: Schema.Types.ObjectId,
+            ref: 'user',
             required: true
         },
         members: [{
