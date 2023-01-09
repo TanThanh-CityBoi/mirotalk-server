@@ -24,8 +24,7 @@ const io = require('socket.io')(httpsServer, {
         methods: ["GET", "POST"],
         allowedHeaders: ["origin, x-requested-with, content-type"],
         credentials: true
-    },
-	transports: ['websocket']
+    }
 });
 
 // API
