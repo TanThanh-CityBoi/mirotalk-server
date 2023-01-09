@@ -19,8 +19,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const httpsServer = https.createServer(app);
 const io = require('socket.io')(httpsServer, {
-	cors: { origin: '*' },
-	maxHttpBufferSize: 1e7,
+	cors: {
+        origin: '*',
+        methods: ["GET", "POST"],
+        allowedHeaders: ["origin, x-requested-with, content-type"],
+        credentials: true
+    }
 });
 
 // API
