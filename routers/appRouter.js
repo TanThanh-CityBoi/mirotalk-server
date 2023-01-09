@@ -24,19 +24,19 @@ router.post('/join-room', async (req, res) => {
         }
 
         existedRoom.members.push(newUser._id)
-        const [__, members, host] = await Promise.all([
-            Room.updateOne(
-                { code: roomCode },
-                { $set: { members: existedRoom.members } }
-            ).exec(),
-            User.find({ _id: { $in: existedRoom.members } }).exec(),
-            User.findOne({ _id: existedRoom.host }).exec()
-        ])
+        await Room.updateOne(
+            { code: roomCode },
+            { $set: { members: existedRoom.members } }
+        ).exec()
 
-        existedRoom.members = members
-        existedRoom.host = host
+        const result = await Room.findOne({ code: roomCode })
+            .populate('members')
+            .populate('host')
+            .populate('messages')
+            .exec()
+
         return res.status(200).send(JSON.stringify({
-            room: existedRoom,
+            room: result,
             message: "SUCCESS"
         }))
     }
@@ -71,6 +71,7 @@ router.get('/room/:roomCode', async (req, res) => {
     Room.findOne({ code: roomCode })
         .populate('members')
         .populate('host')
+        .populate('messages')
         .exec()
         .then(data => {
             const message = isEmpty(data) ? 'ROOM_NOT_FOUND' : 'SUCCESS'

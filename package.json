@@ -6,6 +6,7 @@
   "scripts": {
     "prestart:dev": "npm i",
     "start:dev": "nodemon index.js",
+    "prestart": "npm i",
     "start": "node index.js"
   },
   "repository": {
