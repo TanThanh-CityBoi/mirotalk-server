@@ -50,7 +50,7 @@ module.exports = (io) => {
         Room.findOne({ code: roomCode }).exec(),
         User.findOne({ socketId })
       ])
-      if (isEmpty(room)) return [false, user];
+      if (isEmpty(room)) return [false];
       const members = room.members.filter(
         (val) => val.toString() != user._id.toString()
       );
@@ -75,7 +75,7 @@ module.exports = (io) => {
       ).exec()
       return [true, user];
     } catch (err) {
-      return [false, user];
+      return [false];
     }
   };
 };
