@@ -15,8 +15,8 @@ module.exports = (io) => {
 
       socket.on("disconnect", async () => {
         console.log("someone disconnected: " + socket.id);
-        await deleteUser({ roomCode, socketId: socket.id });
-        io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, socket.id);
+        const [isSuccess, user] = await deleteUser({ roomCode, socketId: socket.id });
+        if (isSuccess) io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
       });
     });
 
@@ -50,7 +50,7 @@ module.exports = (io) => {
         Room.findOne({ code: roomCode }).exec(),
         User.findOne({ socketId })
       ])
-      if (isEmpty(room)) return [false, "DELETE_FAIL"];
+      if (isEmpty(room)) return [false, user];
       const members = room.members.filter(
         (val) => val.toString() != user._id.toString()
       );
@@ -62,7 +62,7 @@ module.exports = (io) => {
           User.deleteMany({ _id: { $in: room.members } }),
           Room.deleteOne({ code: roomCode }),
         ]);
-        return [true, "SUCCESS"];
+        return [true, user];
       }
 
       // update room
@@ -73,9 +73,9 @@ module.exports = (io) => {
         { code: roomCode },
         { $set: { members, host: room.host } }
       ).exec()
-      return [true, "SUCCESS"];
+      return [true, user];
     } catch (err) {
-      return [false, "DELETE_FAIL"];
+      return [false, user];
     }
   };
 };
