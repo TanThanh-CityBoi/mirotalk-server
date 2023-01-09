@@ -32,7 +32,10 @@ router.post('/join-room', async (req, res) => {
         const result = await Room.findOne({ code: roomCode })
             .populate('members')
             .populate('host')
-            .populate('messages')
+            .populate({
+                path: "messages",
+                populate: { path: "sender", model: "user" },
+            })
             .exec()
 
         return res.status(200).send(JSON.stringify({
@@ -71,7 +74,10 @@ router.get('/room/:roomCode', async (req, res) => {
     Room.findOne({ code: roomCode })
         .populate('members')
         .populate('host')
-        .populate('messages')
+        .populate({
+            path: "messages",
+            populate: { path: "sender", model: "user" },
+        })
         .exec()
         .then(data => {
             const message = isEmpty(data) ? 'ROOM_NOT_FOUND' : 'SUCCESS'
