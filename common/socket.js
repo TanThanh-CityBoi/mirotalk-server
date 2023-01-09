@@ -58,9 +58,9 @@ module.exports = (io) => {
       // delete room
       if (members.length === 0) {
         await Promise.all([
+          Message.deleteMany({ _id: { $in: room.messages } }),
+          User.deleteMany({ _id: { $in: room.members } }),
           Room.deleteOne({ code: roomCode }),
-          User.deleteOne({ _id: user._id }),
-          Message.deleteMany({ _id: { $in: roomCode.messages } })
         ]);
         return [true, "SUCCESS"];
       }
