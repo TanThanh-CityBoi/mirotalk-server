@@ -4,10 +4,10 @@ const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const https = require('http');
-const socket = require('./socket')
+const socket = require('./common/socket')
 const { blueBright } = require('chalk')
 const appRouter = require('./routers/appRouter')
-const connectDB = require('./mongoDB')
+const connectDB = require('./common/mongoDB')
 
 
 const app = express();
