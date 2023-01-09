@@ -12,7 +12,7 @@ module.exports = (io) => {
             socket.join(roomCode);
 
             const [room, userConnected] = await Promise.all([
-                Room.findOne({ code: roomCode }).populate("members").exec(),
+                Room.findOne({ code: roomCode }).populate("members").populate("host").exec(),
                 User.findOne({ _id: userId })
             ])
             io.to(roomCode).emit(SOCKET_MESSAGE.USER_CONNECTED, userConnected)

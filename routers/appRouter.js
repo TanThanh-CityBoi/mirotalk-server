@@ -24,15 +24,17 @@ router.post('/join-room', async (req, res) => {
         }
 
         existedRoom.members.push(newUser._id)
-        const [__, members] = await Promise.all([
+        const [__, members, host] = await Promise.all([
             Room.updateOne(
                 { code: roomCode },
                 { $set: { members: existedRoom.members } }
             ).exec(),
-            User.find({ _id: { $in: existedRoom.members } }).exec()
+            User.find({ _id: { $in: existedRoom.members } }).exec(),
+            User.findOne({ _id: existedRoom.host }).exec()
         ])
-        
+
         existedRoom.members = members
+        existedRoom.host = host
         return res.status(200).send(JSON.stringify({
             room: existedRoom,
             message: "SUCCESS"
@@ -68,6 +70,7 @@ router.get('/room/:roomCode', async (req, res) => {
     const { roomCode } = req.params
     Room.findOne({ code: roomCode })
         .populate('members')
+        .populate('host')
         .exec()
         .then(data => {
             const message = isEmpty(data) ? 'ROOM_NOT_FOUND' : 'SUCCESS'
