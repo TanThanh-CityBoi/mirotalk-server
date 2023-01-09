@@ -6,12 +6,12 @@ const Room = new Schema(
         name: String,
         code: {
             type: String,
+            require: true,
             unique: true
         },
         host: {
             type: Schema.Types.ObjectId,
             ref: 'user',
-            required: true
         },
         members: [{
             type: Schema.Types.ObjectId,
