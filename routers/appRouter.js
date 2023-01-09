@@ -6,6 +6,12 @@ const router = express.Router();
 
 router.post('/create-room', (req, res) => {
     const { roomCode } = req.body
+    const existedRoom = Room.findOne({ code: roomCode })
+    if (!isEmpty(existedRoom)) {
+        return res.status(400).send(JSON.stringify({
+            message: "ROOM_EXISTED"
+        }))
+    }
     const newRoom = new Room({ code: roomCode })
     newRoom.save()
         .then((data) => {
@@ -27,14 +33,14 @@ router.post('/create-user', async (req, res) => {
         await newUser.save();
         const room = await Room.findOne({ code: roomCode })
         if (isEmpty(room)) {
-            res.status(404).send(JSON.stringify({ message: "ROOM_NOT_FOUND" }))
+            return res.status(404).send(JSON.stringify({ message: "ROOM_NOT_FOUND" }))
         }
         room.members.push(newUser._id)
         await Room.updateOne(
             { code: roomCode },
             { $set: { members: room.members, host: room.host ? room.host : newUser._id } }
         ).exec()
-        res.status(201).send(JSON.stringify({
+        return res.status(201).send(JSON.stringify({
             user: newUser,
             message: 'CREATED'
         }))
@@ -46,11 +52,39 @@ router.post('/create-user', async (req, res) => {
 })
 
 router.get('/rooms', async (req, res) => {
-    const rooms = await Room.find()
+    Room.find().exec()
+        .then(data => {
+            return res.status(200).send(JSON.stringify({
+                rooms: data,
+                total: data?.length,
+                message: 'SUCCESS'
+            }))
+        })
+        .catch(err => {
+            return res.status(500).send(JSON.stringify({
+                message: 'INTERNAL_SERVER_ERROR',
+                Error: err
+            }))
+        })
+})
 
-    res.status(200).send(JSON.stringify({
-        rooms
-    }))
+router.get('/room/:roomCode', async (req, res) => {
+    const { roomCode } = req.params
+
+    Room.findOne({ code: roomCode }).exec()
+        .then(data => {
+            const message = isEmpty(data) ? 'ROOM_NOT_FOUND' : 'SUCCESS'
+            return res.status(200).send(JSON.stringify({
+                room: data,
+                message
+            }))
+        })
+        .catch(err => {
+            return res.status(500).send(JSON.stringify({
+                message: 'INTERNAL_SERVER_ERROR',
+                Error: err
+            }))
+        })
 })
 
 module.exports = router;
