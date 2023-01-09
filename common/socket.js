@@ -15,7 +15,7 @@ module.exports = (io) => {
 
       socket.on("disconnect", async () => {
         console.log("someone disconnected: " + socket.id);
-        await deleteUser(roomCode, socket.id);
+        await deleteUser({ roomCode, socketId: socket.id });
         io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, socket.id);
       });
     });
