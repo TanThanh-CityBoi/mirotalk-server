@@ -17,20 +17,23 @@ app.use(morgan('combined'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const httpsServer = https.createServer(app).listen(process.env.PORT || 3003, () => {
-	console.log(blueBright.bold(`SERVER STARTED ON PORT: ${process.env.PORT}`));
-});
-
+const httpsServer = https.createServer(app);
 const io = require('socket.io')(httpsServer, {
-	cors: { origin: '*' },
-	maxHttpBufferSize: 1e7,
+	cors: {
+        origin: '*',
+        methods: ["GET", "POST"],
+        allowedHeaders: ["origin, x-requested-with, content-type"],
+        credentials: true
+    },
 });
 
 // API
 // ==============================================================
 app.use('/', appRouter);
 
-// httpsServer.
+httpsServer.listen(process.env.PORT || 3003, () => {
+	console.log(blueBright.bold(`SERVER STARTED ON PORT: ${process.env.PORT}`));
+});
 
 connectDB();
 socket(io);
