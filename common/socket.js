@@ -15,7 +15,7 @@ module.exports = (io) => {
 
       socket.on("disconnect", async () => {
         console.log("someone disconnected: " + socket.id);
-        await deleteUser(roomId, socket.id);
+        await deleteUser(roomCode, socket.id);
         io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, socket.id);
       });
     });
@@ -47,7 +47,7 @@ module.exports = (io) => {
   const deleteUser = async ({ roomCode, socketId }) => {
     try {
       const [room, user] = await Promise.all([
-        Room.findOne({ code: roomId }).exec(),
+        Room.findOne({ code: roomCode }).exec(),
         User.findOne({ socketId })
       ])
       if (isEmpty(room)) return [false, "DELETE_FAIL"];
