@@ -48,7 +48,7 @@ module.exports = (io) => {
     try {
       const [room, user] = await Promise.all([
         Room.findOne({ code: roomCode }).exec(),
-        User.findOne({ socketId })
+        User.findOne({ socketId }).exec()
       ])
       if (isEmpty(room)) return [false];
       const members = room.members.filter(
@@ -59,7 +59,7 @@ module.exports = (io) => {
       if (members.length === 0) {
         await Promise.all([
           Message.deleteMany({ _id: { $in: room.messages } }),
-          User.deleteMany({ _id: { $in: room.members } }),
+          User.deleteMany({ _id: { $in: [...room.disconnectUsers, user._id] } }),
           Room.deleteOne({ code: roomCode }),
         ]);
         return [true, user];
@@ -71,7 +71,7 @@ module.exports = (io) => {
       }
       await Room.updateOne(
         { code: roomCode },
-        { $set: { members, host: room.host } }
+        { $set: { members, host: room.host, disconnectUsers: [...room.disconnectUsers, user._id] } }
       ).exec()
       return [true, user];
     } catch (err) {

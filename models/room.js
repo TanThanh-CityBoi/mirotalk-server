@@ -20,7 +20,11 @@ const Room = new Schema(
         messages: [{
             type: Schema.Types.ObjectId,
             ref: "message"
-        }]
+        }],
+        disconnectUsers: [{
+            type: Schema.Types.ObjectId,
+            ref: 'user'
+        }],
     },
     { timestamps: true }
 );
