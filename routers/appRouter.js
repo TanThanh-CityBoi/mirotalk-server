@@ -4,50 +4,46 @@ const User = require('../models/user')
 const { isEmpty } = require('lodash')
 const router = express.Router();
 
-router.post('/create-room', (req, res) => {
-    const { roomCode } = req.body
-    const existedRoom = Room.findOne({ code: roomCode })
-    if (!isEmpty(existedRoom)) {
-        return res.status(400).send(JSON.stringify({
-            message: "ROOM_EXISTED"
-        }))
-    }
-    const newRoom = new Room({ code: roomCode })
-    newRoom.save()
-        .then((data) => {
-            res.status(201).send(JSON.stringify({
-                data,
-                message: 'CREATED'
-            }))
-        })
-        .catch((err) => {
-            console.error(err)
-            res.status(400).send(err)
-        })
-});
-
-router.post('/create-user', async (req, res) => {
-    const { username, roomCode } = req.body;
-    const newUser = new User({ username })
+router.post('/join-room', async (req, res) => {
+    const { roomCode, username, socketId } = req.body
     try {
-        await newUser.save();
-        const room = await Room.findOne({ code: roomCode })
-        if (isEmpty(room)) {
-            return res.status(404).send(JSON.stringify({ message: "ROOM_NOT_FOUND" }))
+        const newUser = new User({
+            username,
+            socketId
+        })
+        var [_, existedRoom] = await Promise.all([
+            newUser.save(),
+            Room.findOne({ code: roomCode })
+        ])
+        if (isEmpty(existedRoom)) {
+            existedRoom = new Room({
+                code: roomCode,
+                host: newUser._id
+            })
+            await existedRoom.save()
         }
-        room.members.push(newUser._id)
-        await Room.updateOne(
-            { code: roomCode },
-            { $set: { members: room.members, host: room.host ? room.host : newUser._id } }
-        ).exec()
-        return res.status(201).send(JSON.stringify({
-            user: newUser,
-            message: 'CREATED'
+
+        existedRoom.members.push(newUser._id)
+        const [__, members] = await Promise.all([
+            Room.updateOne(
+                { code: roomCode },
+                { $set: { members: existedRoom.members } }
+            ).exec(),
+            User.find({ _id: { $in: existedRoom.members } }).exec()
+        ])
+        
+        existedRoom.members = members
+        return res.status(200).send(JSON.stringify({
+            room: existedRoom,
+            message: "SUCCESS"
         }))
     }
     catch (err) {
         console.error(err)
-        res.status(400).send(err)
+        return res.status(500).send(JSON.stringify({
+            message: 'BAD_REQUEST',
+            Error: err
+        }))
     }
 })
 
@@ -70,8 +66,9 @@ router.get('/rooms', async (req, res) => {
 
 router.get('/room/:roomCode', async (req, res) => {
     const { roomCode } = req.params
-
-    Room.findOne({ code: roomCode }).exec()
+    Room.findOne({ code: roomCode })
+        .populate('members')
+        .exec()
         .then(data => {
             const message = isEmpty(data) ? 'ROOM_NOT_FOUND' : 'SUCCESS'
             return res.status(200).send(JSON.stringify({
