@@ -3,6 +3,7 @@ const { SOCKET_MESSAGE } = require("../utils/constant");
 const User = require("../models/user");
 const Room = require("../models/room");
 const Message = require("../models/message");
+const { yellowBright } = require('chalk')
 const { isEmpty } = require("lodash");
 
 module.exports = (io) => {
@@ -13,10 +14,13 @@ module.exports = (io) => {
       const userConnected = await User.findOne({ socketId: socket.id })
       socket.to(roomCode).emit(SOCKET_MESSAGE.USER_CONNECTED, userConnected);
 
-      socket.on("disconnect", async () => {
-        console.log("someone disconnected: " + socket.id);
-        const [isSuccess, user] = await deleteUser({ roomCode, socketId: socket.id });
-        if (isSuccess) io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
+      socket.on("disconnect", () => {
+        console.log(yellowBright("someone disconnected: " + socket.id));
+        setTimeout(async () => {
+          const [isSuccess, user] = await deleteUser({ roomCode, socketId: socket.id });
+          if (isSuccess) io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
+          console.log(yellowBright("Removed user: " + socket.id));
+        }, 5000);
       });
     });
 
@@ -71,7 +75,12 @@ module.exports = (io) => {
       }
       await Room.updateOne(
         { code: roomCode },
-        { $set: { members, host: room.host, disconnectUsers: [...room.disconnectUsers, user._id] } }
+        {
+          $set: {
+            members, host: room.host,
+            disconnectUsers: [...room.disconnectUsers, user._id]
+          }
+        }
       ).exec()
       return [true, user];
     } catch (err) {
