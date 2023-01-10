@@ -14,13 +14,10 @@ module.exports = (io) => {
       const userConnected = await User.findOne({ socketId: socket.id })
       socket.to(roomCode).emit(SOCKET_MESSAGE.USER_CONNECTED, userConnected);
 
-      socket.on("disconnect", () => {
+      socket.on("disconnect", async () => {
         console.log(yellowBright("someone disconnected: " + socket.id));
-        setTimeout(async () => {
-          const [isSuccess, user] = await deleteUser({ roomCode, socketId: socket.id });
-          if (isSuccess) io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
-          console.log(yellowBright("Removed user: " + socket.id));
-        }, 5000);
+        const [isSuccess, user] = await deleteUser({ roomCode, socketId: socket.id });
+        if (isSuccess) io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
       });
     });
 
