@@ -21,6 +21,32 @@ module.exports = (io) => {
       });
     });
 
+    socket.on(SOCKET_MESSAGE.RECONNECTED, async ({ roomCode }) => {
+      socket.join(roomCode);
+      //
+      const room = await Room.findOne({ code: roomCode }).exec()
+      if (isEmpty(room)) return;
+      //
+      const userReconnect = await User.findOne({ socketId: socket.id })
+      if (isEmpty(userReconnect)) return
+      //
+      const disconnectUsers = room.disconnectUsers.filter(
+        (val) => val.toString() != userReconnect._id.toString())
+      if (disconnectUsers.length === room.disconnectUsers.length) return
+      //
+      await Room.updateOne({ code: roomCode }, { $set: { disconnectUsers } }).exec()
+      const roomInfo = await Room.findOne({ code: roomCode })
+        .populate('members')
+        .populate('host')
+        .populate({
+          path: "messages",
+          populate: { path: "sender", model: "user" },
+        })
+        .exec()
+      socket.to(socket.id).emit(SOCKET_MESSAGE.RECONNECTED, roomInfo);
+      socket.to(roomCode).emit(SOCKET_MESSAGE.USER_RECONNECTED, userReconnect)
+    })
+
     socket.on(SOCKET_MESSAGE.SEND_MESSAGE, async ({ roomCode, message }) => {
       const [sender, room] = await Promise.all([
         User.findOne({ socketId: socket.id }),
