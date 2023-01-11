@@ -3,7 +3,7 @@ const { SOCKET_MESSAGE } = require("../utils/constant");
 const User = require("../models/user");
 const Room = require("../models/room");
 const Message = require("../models/message");
-const { yellowBright } = require('chalk')
+const { yellowBright } = require("chalk");
 const { isEmpty } = require("lodash");
 
 module.exports = (io) => {
@@ -11,41 +11,49 @@ module.exports = (io) => {
     socket.on(SOCKET_MESSAGE.JOIN_ROOM, async ({ roomCode }) => {
       socket.join(roomCode);
 
-      const userConnected = await User.findOne({ socketId: socket.id })
+      const userConnected = await User.findOne({ socketId: socket.id });
       socket.to(roomCode).emit(SOCKET_MESSAGE.USER_CONNECTED, userConnected);
 
       socket.on("disconnect", async () => {
         console.log(yellowBright("someone disconnected: " + socket.id));
-        const [isSuccess, user] = await deleteUser({ roomCode, socketId: socket.id });
-        if (isSuccess) io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
+        const [isSuccess, user] = await deleteUser({
+          roomCode,
+          socketId: socket.id,
+        });
+        if (isSuccess)
+          io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
       });
     });
 
-    socket.on(SOCKET_MESSAGE.RECONNECTED, async ({ roomCode }) => {
+    socket.on("reconnect", async ({ roomCode }) => {
       socket.join(roomCode);
       //
-      const room = await Room.findOne({ code: roomCode }).exec()
+      const room = await Room.findOne({ code: roomCode }).exec();
       if (isEmpty(room)) return;
       //
-      const userReconnect = await User.findOne({ socketId: socket.id })
-      if (isEmpty(userReconnect)) return
+      const userReconnect = await User.findOne({ socketId: socket.id });
+      if (isEmpty(userReconnect)) return;
       //
       const disconnectUsers = room.disconnectUsers.filter(
-        (val) => val.toString() != userReconnect._id.toString())
-      if (disconnectUsers.length === room.disconnectUsers.length) return
+        (val) => val.toString() != userReconnect._id.toString()
+      );
+      if (disconnectUsers.length === room.disconnectUsers.length) return;
       //
-      await Room.updateOne({ code: roomCode }, { $set: { disconnectUsers } }).exec()
+      await Room.updateOne(
+        { code: roomCode },
+        { $set: { disconnectUsers } }
+      ).exec();
       const roomInfo = await Room.findOne({ code: roomCode })
-        .populate('members')
-        .populate('host')
+        .populate("members")
+        .populate("host")
         .populate({
           path: "messages",
           populate: { path: "sender", model: "user" },
         })
-        .exec()
+        .exec();
       socket.to(socket.id).emit(SOCKET_MESSAGE.RECONNECTED, roomInfo);
-      socket.to(roomCode).emit(SOCKET_MESSAGE.USER_RECONNECTED, userReconnect)
-    })
+      socket.to(roomCode).emit(SOCKET_MESSAGE.USER_RECONNECTED, userReconnect);
+    });
 
     socket.on(SOCKET_MESSAGE.SEND_MESSAGE, async ({ roomCode, message }) => {
       const [sender, room] = await Promise.all([
@@ -70,35 +78,36 @@ module.exports = (io) => {
       });
     });
 
-
-    socket.on(SOCKET_MESSAGE.CALL_USER, ({ roomCode, offer }) => {
-      const [user, room] = Promise.all([
+    socket.on(SOCKET_MESSAGE.CALL_USER, async ({ roomCode, offer }) => {
+      console.log(roomCode);
+      const [user, room] = await Promise.all([
         User.findOne({ socketId: socket.id }).exec(),
-        Room.findOne({ code: roomCode }).exec()
-      ])
-      if (isEmpty(user && room)) return
+        Room.findOne({ code: roomCode }).exec(),
+      ]);
+      if (isEmpty(user && room)) return;
 
-      if (!room.members.includes(user._id)) return
+      if (!room.members.includes(user._id)) return;
 
-      socket.to(roomCode).emit(SOCKET_MESSAGE.INCOMMING_CALL, { from: user, offer })
+      socket
+        .to(roomCode)
+        .emit(SOCKET_MESSAGE.INCOMMING_CALL, { from: user, offer });
+    });
 
-    })
-
-    socket.on(SOCKET_MESSAGE.CALL_ACCEPTED, ({ toUser }) => {
-
-      const user = User.findOne({ socketId: socket.id });
-      if (isEmpty(user)) return
-
-      socket.to(toUser.socketId).emit(SOCKET_MESSAGE.CALL_ACCEPTED, { from: user, ans })
-    })
+    socket.on(SOCKET_MESSAGE.CALL_ACCEPTED, async ({ toUser, ans }) => {
+      const user = await User.findOne({ socketId: socket.id }).exec();
+      if (isEmpty(user)) return;
+      socket
+        .to(toUser.socketId)
+        .emit(SOCKET_MESSAGE.CALL_ACCEPTED, { from: user, ans });
+    });
   });
 
   const deleteUser = async ({ roomCode, socketId }) => {
     try {
       const [room, user] = await Promise.all([
         Room.findOne({ code: roomCode }).exec(),
-        User.findOne({ socketId }).exec()
-      ])
+        User.findOne({ socketId }).exec(),
+      ]);
       if (isEmpty(room)) return [false];
       const members = room.members.filter(
         (val) => val.toString() != user._id.toString()
@@ -108,7 +117,9 @@ module.exports = (io) => {
       if (members.length === 0) {
         await Promise.all([
           Message.deleteMany({ _id: { $in: room.messages } }),
-          User.deleteMany({ _id: { $in: [...room.disconnectUsers, user._id] } }),
+          User.deleteMany({
+            _id: { $in: [...room.disconnectUsers, user._id] },
+          }),
           Room.deleteOne({ code: roomCode }),
         ]);
         return [true, user];
@@ -122,11 +133,12 @@ module.exports = (io) => {
         { code: roomCode },
         {
           $set: {
-            members, host: room.host,
-            disconnectUsers: [...room.disconnectUsers, user._id]
-          }
+            members,
+            host: room.host,
+            disconnectUsers: [...room.disconnectUsers, user._id],
+          },
         }
-      ).exec()
+      ).exec();
       return [true, user];
     } catch (err) {
       return [false];
