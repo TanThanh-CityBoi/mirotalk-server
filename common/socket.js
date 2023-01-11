@@ -69,6 +69,28 @@ module.exports = (io) => {
         sender,
       });
     });
+
+
+    socket.on(SOCKET_MESSAGE.CALL_USER, ({ roomCode, offer }) => {
+      const [user, room] = Promise.all([
+        User.findOne({ socketId: socket.id }).exec(),
+        Room.findOne({ code: roomCode }).exec()
+      ])
+      if (isEmpty(user && room)) return
+
+      if (!room.members.includes(user._id)) return
+
+      socket.to(roomCode).emit(SOCKET_MESSAGE.INCOMMING_CALL, { from: user, offer })
+
+    })
+
+    socket.on(SOCKET_MESSAGE.CALL_ACCEPTED, ({ toUser }) => {
+
+      const user = User.findOne({ socketId: socket.id });
+      if (isEmpty(user)) return
+
+      socket.to(toUser.socketId).emit(SOCKET_MESSAGE.CALL_ACCEPTED, { from: user, ans })
+    })
   });
 
   const deleteUser = async ({ roomCode, socketId }) => {
