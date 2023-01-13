@@ -55,10 +55,10 @@ module.exports = (io) => {
       socket.to(roomCode).emit(SOCKET_MESSAGE.USER_RECONNECTED, userReconnect);
     });
 
-    socket.on(SOCKET_MESSAGE.SEND_MESSAGE, async ({ roomCode, message }) => {
+    socket.on(SOCKET_MESSAGE.SEND_MESSAGE, async ({ message }) => {
       const [sender, room] = await Promise.all([
         User.findOne({ socketId: socket.id }),
-        Room.findOne({ code: roomCode }),
+        getRoomBySocketId(socket.id)
       ]);
       if (isEmpty(sender && room)) return;
       const newMessage = new Message({
@@ -68,28 +68,27 @@ module.exports = (io) => {
       await Promise.all([
         newMessage.save(),
         Room.updateOne(
-          { code: roomCode },
+          { code: room.roomCode },
           { $set: { messages: [...room.messages, newMessage._id] } }
         ),
       ]);
-      io.to(roomCode).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
+      io.to(room.roomCode).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
         content: message,
         sender,
       });
     });
 
-    socket.on(SOCKET_MESSAGE.CALL_USER, async ({ roomCode, offer }) => {
-      console.log(roomCode);
+    socket.on(SOCKET_MESSAGE.CALL_USER, async ({ offer }) => {
       const [user, room] = await Promise.all([
         User.findOne({ socketId: socket.id }).exec(),
-        Room.findOne({ code: roomCode }).exec(),
+        getRoomBySocketId(socket.id)
       ]);
       if (isEmpty(user && room)) return;
 
       if (!room.members.includes(user._id)) return;
 
       socket
-        .to(roomCode)
+        .to(room.roomCode)
         .emit(SOCKET_MESSAGE.INCOMMING_CALL, { from: user, offer });
     });
 
@@ -144,4 +143,10 @@ module.exports = (io) => {
       return [false];
     }
   };
+
+  const getRoomBySocketId = async (socketId) => {
+    const user = await User.findOne({ socketId }).exec();
+    if (isEmpty(user)) return null
+    return await Room.findOne({ members: { $all: [user._id] } })
+  }
 };
