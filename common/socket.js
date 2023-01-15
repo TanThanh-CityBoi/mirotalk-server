@@ -99,6 +99,12 @@ module.exports = (io) => {
         .to(toUser.socketId)
         .emit(SOCKET_MESSAGE.CALL_ACCEPTED, { from: user, ans });
     });
+    socket.on(SOCKET_MESSAGE.ICE_CANDIDATE, async ({ candidate }) => {
+      const user = await User.findOne({ socketId: socket.id }).exec();
+      const room = await getRoomBySocketId(socket.id);
+      if (isEmpty(user && room)) return;
+      socket.to(room.code).emit(SOCKET_MESSAGE.ICE_CANDIDATE, { candidate });
+    });
   });
 
   const deleteUser = async ({ roomCode, socketId }) => {
