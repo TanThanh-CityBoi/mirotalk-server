@@ -78,7 +78,7 @@ module.exports = (io) => {
       });
     });
 
-    socket.on(SOCKET_MESSAGE.CALL_USER, async ({ offer }) => {
+    socket.on(SOCKET_MESSAGE.CALL_USER, async ({ offer, toSocketId }) => {
       const [user, room] = await Promise.all([
         User.findOne({ socketId: socket.id }).exec(),
         getRoomBySocketId(socket.id),
@@ -88,7 +88,7 @@ module.exports = (io) => {
       if (!room.members.includes(user._id)) return;
 
       socket
-        .to(room.code)
+        .to(toSocketId)
         .emit(SOCKET_MESSAGE.INCOMMING_CALL, { from: user, offer });
     });
 
@@ -99,12 +99,12 @@ module.exports = (io) => {
         .to(toUser.socketId)
         .emit(SOCKET_MESSAGE.CALL_ACCEPTED, { from: user, ans });
     });
-    socket.on(SOCKET_MESSAGE.ICE_CANDIDATE, async ({ candidate }) => {
-      const user = await User.findOne({ socketId: socket.id }).exec();
-      const room = await getRoomBySocketId(socket.id);
-      if (isEmpty(user && room)) return;
-      socket.to(room.code).emit(SOCKET_MESSAGE.ICE_CANDIDATE, { candidate });
-    });
+    socket.on(
+      SOCKET_MESSAGE.ICE_CANDIDATE,
+      async ({ candidate, toSocketId }) => {
+        socket.to(toSocketId).emit(SOCKET_MESSAGE.ICE_CANDIDATE, { candidate, toSocketId: socket.id });
+      }
+    );
   });
 
   const deleteUser = async ({ roomCode, socketId }) => {
