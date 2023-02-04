@@ -3,6 +3,7 @@ const Room = require('../models/room');
 const User = require('../models/user')
 const { isEmpty } = require('lodash')
 const router = express.Router();
+const path = require('path')
 
 router.post('/join-room', async (req, res) => {
     const { roomCode, username, socketId } = req.body
@@ -92,6 +93,12 @@ router.get('/room/:roomCode', async (req, res) => {
                 Error: err
             }))
         })
+})
+
+router.get('/download/:fileName', (req, res) => {
+    const { fileName } = req.params
+    var filePath = path.join(__dirname, '../', `upload/${fileName}`);
+    res.download(filePath)
 })
 
 module.exports = router;

@@ -19,12 +19,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const httpsServer = https.createServer(app);
 const io = require('socket.io')(httpsServer, {
-	cors: {
+    cors: {
         origin: '*',
         methods: ["GET", "POST"],
         allowedHeaders: ["origin, x-requested-with, content-type"],
         credentials: true
-    }
+    },
+    transports: ['websocket'],
+    allowUpgrades: false,
+    pingTimeout: 90000,
 });
 
 // API
@@ -32,7 +35,7 @@ const io = require('socket.io')(httpsServer, {
 app.use('/', appRouter);
 
 httpsServer.listen(process.env.PORT || 3003, () => {
-	console.log(blueBright.bold(`SERVER STARTED ON PORT: ${process.env.PORT}`));
+    console.log(blueBright.bold(`SERVER STARTED ON PORT: ${process.env.PORT}`));
 });
 
 connectDB();

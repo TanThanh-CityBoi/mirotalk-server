@@ -1,10 +1,11 @@
-const mongoose = require("mongoose");
 const { SOCKET_MESSAGE } = require("../utils/constant");
 const User = require("../models/user");
 const Room = require("../models/room");
 const Message = require("../models/message");
 const { yellowBright } = require("chalk");
 const { isEmpty } = require("lodash");
+const { writeFile } = require("fs");
+var path = require('path');
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -99,12 +100,49 @@ module.exports = (io) => {
         .to(toUser.socketId)
         .emit(SOCKET_MESSAGE.CALL_ACCEPTED, { from: user, ans });
     });
+
     socket.on(
       SOCKET_MESSAGE.ICE_CANDIDATE,
       async ({ candidate, toSocketId }) => {
         socket.to(toSocketId).emit(SOCKET_MESSAGE.ICE_CANDIDATE, { candidate, toSocketId: socket.id });
       }
     );
+
+    socket.on(SOCKET_MESSAGE.UPLOAD_FILE, async (file, callback) => {
+      const [sender, room] = await Promise.all([
+        User.findOne({ socketId: socket.id }),
+        getRoomBySocketId(socket.id),
+      ]);
+      if (isEmpty(sender && room)) return;
+
+      writeFile("/upload", file, (err) => {
+        console.log("🚀 ~ file err: ", err)
+        callback({ message: err ? "failure" : "success" });
+        if(err) return
+      });
+
+      var filePath = path.join(__dirname, '../', `upload/${fileName}`);
+
+      const newMessage = new Message({
+        content: filePath,
+        sender: sender._id,
+        typeMessage: 'file'
+      });
+      await Promise.all([
+        newMessage.save(),
+        Room.updateOne(
+          { code: room.code },
+          { $set: { messages: [...room.messages, newMessage._id] } }
+        ),
+      ]);
+
+      socket.to(room.code).emit(SOCKET_MESSAGE.UPLOAD_FILE, {
+        sender,
+        content,
+        url: filePath,
+        fileName: file.name
+      })
+    });
   });
 
   const deleteUser = async ({ roomCode, socketId }) => {
