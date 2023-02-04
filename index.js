@@ -25,8 +25,6 @@ const io = require('socket.io')(httpsServer, {
         allowedHeaders: ["origin, x-requested-with, content-type"],
         credentials: true
     },
-    transports: ['websocket'],
-    allowUpgrades: false,
     pingTimeout: 90000,
 });
 
