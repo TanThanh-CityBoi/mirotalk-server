@@ -121,7 +121,7 @@ module.exports = (io) => {
         if(err) return
       });
 
-      var filePath = path.join(__dirname, '../', `upload/${fileName}`);
+      const url = path.join(__dirname, '../', `download/${fileName}`);
 
       const newMessage = new Message({
         content: filePath,
@@ -138,8 +138,8 @@ module.exports = (io) => {
 
       socket.to(room.code).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
         sender,
-        content,
-        url: filePath,
+        content: url,
+        url,
         fileName: file.name
       })
     });
