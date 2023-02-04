@@ -136,7 +136,7 @@ module.exports = (io) => {
         ),
       ]);
 
-      socket.to(room.code).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
+      io.to(room.code).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
         sender,
         content: url,
         url,
