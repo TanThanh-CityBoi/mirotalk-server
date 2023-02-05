@@ -3,7 +3,8 @@ const Room = require('../models/room');
 const User = require('../models/user')
 const { isEmpty } = require('lodash')
 const router = express.Router();
-const path = require('path')
+const path = require('path');
+const fs = require('fs')
 
 router.post('/join-room', async (req, res) => {
     const { roomCode, username, socketId } = req.body
@@ -95,10 +96,42 @@ router.get('/room/:roomCode', async (req, res) => {
         })
 })
 
-router.get('/download/:fileName', (req, res) => {
-    const { fileName } = req.params
-    var filePath = path.join(__dirname, '../', `upload/${fileName}`);
+router.get('/download/:id', (req, res) => {
+    const { id } = req.params
+    var filePath = path.join(__dirname, '../', `upload/${id}`);
     res.download(filePath)
+})
+
+router.post('/upload', (req, res) => {
+
+    const files = req.files;
+    if (isEmpty(files)) {
+        return res.status(400).send('FILE_NOT_FOUND')
+    }
+
+    try {
+        const { name, data } = Object.values(files)[0]
+        var filePath = path.join(__dirname, "../", "/upload/" + name);
+
+        fs.writeFile(filePath, data, function (err) {
+            if (err) throw err
+        });
+
+        res.status(200).send(JSON.stringify({
+            message: "UPLOADED",
+            data: {
+                fileName: name,
+                url: `${req.headers.host}/download/${name}`
+            }
+        }))
+    }
+    catch (err) {
+        return res.status(500).send(JSON.stringify({
+            message: 'INTERNAL_SERVER_ERROR',
+            Error: err
+        }))
+    }
+
 })
 
 module.exports = router;

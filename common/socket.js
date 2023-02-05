@@ -108,41 +108,6 @@ module.exports = (io) => {
       }
     );
 
-    socket.on(SOCKET_MESSAGE.UPLOAD_FILE, async (file, callback) => {
-      const [sender, room] = await Promise.all([
-        User.findOne({ socketId: socket.id }),
-        getRoomBySocketId(socket.id),
-      ]);
-      if (isEmpty(sender && room)) return;
-
-      writeFile("/upload", file, (err) => {
-        console.log("🚀 ~ file err: ", err)
-        callback({ message: err ? "failure" : "success" });
-        if(err) return
-      });
-
-      const url = path.join(__dirname, '../', `download/${fileName}`);
-
-      const newMessage = new Message({
-        content: filePath,
-        sender: sender._id,
-        typeMessage: 'file'
-      });
-      await Promise.all([
-        newMessage.save(),
-        Room.updateOne(
-          { code: room.code },
-          { $set: { messages: [...room.messages, newMessage._id] } }
-        ),
-      ]);
-
-      io.to(room.code).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
-        sender,
-        content: url,
-        url,
-        fileName: file.name
-      })
-    });
   });
 
   const deleteUser = async ({ roomCode, socketId }) => {

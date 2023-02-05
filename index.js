@@ -17,6 +17,11 @@ app.use(morgan('combined'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
+
+var fileupload = require("express-fileupload");
+app.use(fileupload());
+
 const httpsServer = https.createServer(app);
 const io = require('socket.io')(httpsServer, {
     cors: {
