@@ -56,7 +56,7 @@ module.exports = (io) => {
       socket.to(roomCode).emit(SOCKET_MESSAGE.USER_RECONNECTED, userReconnect);
     });
 
-    socket.on(SOCKET_MESSAGE.SEND_MESSAGE, async ({ message }) => {
+    socket.on(SOCKET_MESSAGE.SEND_MESSAGE, async ({ message, typeMessage }) => {
       const [sender, room] = await Promise.all([
         User.findOne({ socketId: socket.id }),
         getRoomBySocketId(socket.id),
@@ -65,6 +65,7 @@ module.exports = (io) => {
       const newMessage = new Message({
         content: message,
         sender: sender._id,
+        typeMessage: typeMessage ? typeMessage : 'text'
       });
       await Promise.all([
         newMessage.save(),
@@ -76,6 +77,7 @@ module.exports = (io) => {
       io.to(room.code).emit(SOCKET_MESSAGE.RECEIVE_MESSAGE, {
         content: message,
         sender,
+        typeMessage
       });
     });
 
