@@ -6,6 +6,7 @@ const Message = require("../models/message");
 const { yellowBright } = require("chalk");
 const { isEmpty } = require("lodash");
 
+
 module.exports = (io) => {
   io.on("connection", (socket) => {
     socket.on(SOCKET_MESSAGE.JOIN_ROOM, async ({ roomCode }) => {
@@ -24,6 +25,17 @@ module.exports = (io) => {
           io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
       });
     });
+    socket.on('offer', data => {
+        socket.to(data.offerReceiveID).emit('getOffer', {sdp: data.sdp, offerSendID: data.offerSendID, offerSendEmail: data.offerSendEmail});
+    });
+
+    socket.on('answer', data => {
+        socket.to(data.answerReceiveID).emit('getAnswer', {sdp: data.sdp, answerSendID: data.answerSendID});
+    });
+
+    socket.on('candidate', data => {
+        socket.to(data.candidateReceiveID).emit('getCandidate', {candidate: data.candidate, candidateSendID: data.candidateSendID});
+    })
 
     socket.on("reconnect", async ({ roomCode }) => {
       socket.join(roomCode);
