@@ -25,8 +25,9 @@ module.exports = (io) => {
           io.to(roomCode).emit(SOCKET_MESSAGE.USER_DISCONNECTED, user);
       });
     });
+
     socket.on('offer', data => {
-        socket.to(data.offerReceiveID).emit('getOffer', {sdp: data.sdp, offerSendID: data.offerSendID, offerSendEmail: data.offerSendEmail});
+        socket.to(data.offerReceiveID).emit('getOffer', {sdp: data.sdp, offerSendID: data.offerSendID, offerSendName: data.offerSendName});
     });
 
     socket.on('answer', data => {
